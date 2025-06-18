@@ -35,8 +35,19 @@ pipeline {
                 ])
             }
         }
-    }
 
+stage('Rerun Failed Tests') {
+            steps {
+                script {
+                    if (fileExists('test-output/testng-failed.xml')) {
+                        sh 'mvn test -DsuiteXmlFile=test-output/testng-failed.xml || true'
+                    } else {
+                        echo "No failed test suite found."
+                    }
+                }
+            }
+    }
+}
     post {
         always {
             archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
