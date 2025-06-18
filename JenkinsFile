@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven3'         // Define tool name from Jenkins -> Global Tool Config
+        jdk 'JDK11'            // Use installed JDK (as per name in Jenkins config)
+    }
+
+    environment {
+        REPORT_DIR = "test-output"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/GeetashreeNipane/project1.git', branch: 'main'
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                sh 'mvn clean test'
+            }
+        }
+
+        stage('Publish TestNG Report') {
+            steps {
+                publishHTML (target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: "${env.REPORT_DIR}",
+                    reportFiles: 'index.html',
+                    reportName: 'TestNG HTML Report'
+                ])
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+            junit 'test-output/testng-results.xml' // If using TestNG plugin
+        }
+    }
+}
